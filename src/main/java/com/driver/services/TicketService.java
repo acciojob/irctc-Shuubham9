@@ -67,15 +67,19 @@ public class TicketService {
 
         for(Ticket ticket : BookedTickets){
             if(ticket.getToStation().toString().equals(fromStation)){
-                availableBetStations++;
+                availableBetStations+=ticket.getPassengersList().size();
             }
             else if(ticket.getFromStation().toString().equals(toStation)){
-                availableBetStations++;
+                availableBetStations+=ticket.getPassengersList().size();
             }
         }
-        Integer totalTicketsBooked = BookedTickets.size();
 
-        Integer SeatssNotavailable = totalTicketsBooked - availableBetStations;
+        Integer totalpassengers =0;
+        for(Ticket ticket : BookedTickets){
+             totalpassengers+=ticket.getPassengersList().size();
+        }
+
+        Integer SeatssNotavailable = totalpassengers - availableBetStations;
         availableSeats= totalSeats-SeatssNotavailable;
 
         if(availableSeats<bookTicketEntryDto.getNoOfSeats()){
@@ -155,7 +159,8 @@ public class TicketService {
 
         trainRepository.save(train);
 
-       return ticket.getTicketId();
+        int ticketId= ticket.getTicketId();
+       return ticketId;
 
     }
 }

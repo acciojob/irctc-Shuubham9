@@ -70,15 +70,20 @@ public class TrainService {
 
         for(Ticket ticket : BookedTickets){
             if(ticket.getToStation().toString().equals(fromStation)){
-                availableBetStations++;
+                availableBetStations+=ticket.getPassengersList().size();
             }
-            else if(ticket.getFromStation().toString().equals(toStation)){
-                availableBetStations++;
+            if(ticket.getFromStation().toString().equals(toStation)){
+                availableBetStations+=ticket.getPassengersList().size();
             }
         }
-        Integer totalTicketsBooked = BookedTickets.size();
 
-        Integer SeatssNotavailable = totalTicketsBooked - availableBetStations;
+        Integer totalpassengers =0;
+        for(Ticket ticket : BookedTickets){
+            totalpassengers+=ticket.getPassengersList().size();
+        }
+
+
+        Integer SeatssNotavailable = totalpassengers - availableBetStations;
         availableSeats= totalSeats-SeatssNotavailable;
 
        return availableSeats;
@@ -103,7 +108,10 @@ public class TrainService {
 
         for(Ticket ticket : bookedTickets){
             if(ticket.getFromStation().toString().equals(station.toString())){
-                count++;
+                List<Passenger> passengers = ticket.getPassengersList();
+                for(int i =0;i<passengers.size();i++){
+                    count++;
+                }
             }
         }
         return count;
