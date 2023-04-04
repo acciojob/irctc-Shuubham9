@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TrainService {
@@ -20,6 +21,7 @@ public class TrainService {
     @Autowired
     TrainRepository trainRepository;
 
+    List<Train>trains=new ArrayList<>();
     public Integer addTrain(AddTrainEntryDto trainEntryDto){
 
         //Add the train to the trainRepository
@@ -27,24 +29,22 @@ public class TrainService {
         //Save the train and return the trainId that is generated from the database.
         //Avoid using the lombok library
         Train train = new Train();
-
-        String route = "";
-
-        List<Station> stations = trainEntryDto.getStationRoute();
-
-        for(Station station : stations){
-            route+= station.toString()+",";
-        }
-        int length = route.length();
-        route = route.substring(0,length-1);
-
-        train.setRoute(route);
-        train.setDepartureTime(trainEntryDto.getDepartureTime());
         train.setNoOfSeats(trainEntryDto.getNoOfSeats());
 
-        trainRepository.save(train);
+        List<Station> list = trainEntryDto.getStationRoute();
+        String route = "";
 
-        return train.getTrainId();
+        for(int i=0;i<list.size();i++){
+            if(i==list.size()-1)
+                route += list.get(i);
+            else
+                route += list.get(i) + ",";
+        }
+        train.setRoute(route);
+
+        train.setDepartureTime(trainEntryDto.getDepartureTime());
+        trains.add(train);
+        return trainRepository.save(train).getTrainId();
     }
 
     public Integer calculateAvailableSeats(SeatAvailabilityEntryDto seatAvailabilityEntryDto){
@@ -152,34 +152,25 @@ public class TrainService {
         //You can assume that the date change doesn't need to be done ie the travel will certainly happen with the same date (More details
         //in problem statement)
         //You can also assume the seconds and milli seconds value will be 0 in a LocalTime format.
-        List<Integer> passingtrains = new ArrayList<>();
-
+        List<Integer> TrainList = new ArrayList<>();
         List<Train> trains = trainRepository.findAll();
+        for(Train t:trains){
+            String s = t.getRoute();
+            String[] ans = s.split(",");
+            for(int i=0;i<ans.length;i++){
+                if(Objects.equals(ans[i], String.valueOf(station))){
+                    int startTimeInMin = (startTime.getHour() * 60) + startTime.getMinute();
+                    int lastTimeInMin = (endTime.getHour() * 60) + endTime.getMinute();
 
-        for(Train train : trains){
-            if(train.getRoute().contains(station.toString())){
-                LocalTime departure = train.getDepartureTime();
-                String route = train.getRoute();
-                String [] stations = route.split(",");
 
-//                if(stations[0].equals(station.toString()) && (departure.isAfter(startTime)||departure.toString().equals(startTime.toString()) ) && (departure.isBefore(endTime)||departure.toString().equals(endTime.toString()))){
-//                    passingtrains.add(train.getTrainId());
-//                    continue;
-//                }
-
-                for(int i=0;i<stations.length;i++){
-                    departure.plusHours(1);
-                    if(stations[i].equals(station.toString())){
-                        break;
-                    }
-                }
-                if((departure.isAfter(startTime)||departure.toString().equals(startTime.toString()) ) && (departure.isBefore(endTime)||departure.toString().equals(endTime.toString()))){
-                    passingtrains.add(train.getTrainId());
+                    int departureTimeInMin = (t.getDepartureTime().getHour() * 60) + t.getDepartureTime().getMinute();
+                    int reachingTimeInMin  = departureTimeInMin + (i * 60);
+                    if(reachingTimeInMin>=startTimeInMin && reachingTimeInMin<=lastTimeInMin)
+                        TrainList.add(t.getTrainId());
                 }
             }
         }
-
-        return passingtrains;
+        return TrainList;
     }
 
 }
